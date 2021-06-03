@@ -1,5 +1,9 @@
 public struct Parser<Output> {
     let parse: (Substring) -> (Substring, Output)?
+
+    public init(_ parse: @escaping (Substring) -> (Substring, Output)?) {
+        self.parse = parse
+    }
 }
 
 public extension Parser {
@@ -80,14 +84,14 @@ public extension Parser {
 }
 
 public enum Parsers {
-    static func string(_ string: String) -> Parser<Void> {
+    public static func string(_ string: String) -> Parser<Void> {
         return Parser {
             guard $0.hasPrefix(string) else { return nil }
             return ($0.dropFirst(string.count), ())
         }
     }
 
-    static func upTo(_ ch: Character) -> Parser<Substring> {
+    public static func upTo(_ ch: Character) -> Parser<Substring> {
         return Parser {
             guard let index = $0.firstIndex(of: ch) else {
                 return nil
@@ -96,14 +100,14 @@ public enum Parsers {
         }
     }
 
-    static func upTo(_ pred: @escaping (Character) -> Bool) -> Parser<Substring> {
+    public static func upTo(_ pred: @escaping (Character) -> Bool) -> Parser<Substring> {
         return Parser {
             guard let index = $0.firstIndex(where: pred) else { return nil }
             return ($0[index...], $0[..<index])
         }
     }
 
-    static func sequence<O1, O2>(_ p1: Parser<O1>, _ p2: Parser<O2>) -> Parser<(O1, O2)> {
+    public static func sequence<O1, O2>(_ p1: Parser<O1>, _ p2: Parser<O2>) -> Parser<(O1, O2)> {
         return Parser {
             guard
                 let (rest1, o1) = p1.parse($0),
@@ -116,7 +120,7 @@ public enum Parsers {
         }
     }
 
-    static func sequence<O1, O2, O3>(_ p1: Parser<O1>, _ p2: Parser<O2>, _ p3: Parser<O3>) -> Parser<(O1, O2, O3)> {
+    public static func sequence<O1, O2, O3>(_ p1: Parser<O1>, _ p2: Parser<O2>, _ p3: Parser<O3>) -> Parser<(O1, O2, O3)> {
         return Parser {
             guard
                 let (rest1, o1) = p1.parse($0),
@@ -130,7 +134,7 @@ public enum Parsers {
         }
     }
 
-    static func sequence<O1, O2, O3, O4>(_ p1: Parser<O1>, _ p2: Parser<O2>, _ p3: Parser<O3>, _ p4: Parser<O4>) -> Parser<(O1, O2, O3, O4)> {
+    public  static func sequence<O1, O2, O3, O4>(_ p1: Parser<O1>, _ p2: Parser<O2>, _ p3: Parser<O3>, _ p4: Parser<O4>) -> Parser<(O1, O2, O3, O4)> {
         return Parser {
             guard
                 let (rest1, o1) = p1.parse($0),
@@ -145,7 +149,7 @@ public enum Parsers {
         }
     }
 
-    static func oneOf<Output>(_ parsers: Parser<Output>...) -> Parser<Output> {
+    public static func oneOf<Output>(_ parsers: Parser<Output>...) -> Parser<Output> {
         return Parser {
             for p in parsers {
                 if let result = p.parse($0) {
@@ -156,18 +160,18 @@ public enum Parsers {
         }
     }
 
-    static let newLine = string("\n")
+    public static let newLine = string("\n")
 
-    static func characters(isIncluded: @escaping (Character) -> Bool) -> Parser<Substring> {
+    public static func characters(isIncluded: @escaping (Character) -> Bool) -> Parser<Substring> {
         return Parser {
             let index = $0.firstIndex(where: { !isIncluded($0) }) ?? $0.endIndex
             return ($0[index...], $0[..<index])
         }
     }
 
-    static let empty = Parser { ($0, ()) }
+    public static let empty = Parser { ($0, ()) }
 
-    static func fail<T>() -> Parser<T> {
+    public static func fail<T>() -> Parser<T> {
         return Parser { _ in nil }
     }
 }
